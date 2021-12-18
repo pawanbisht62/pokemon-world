@@ -31,15 +31,15 @@ impl PokemonError {
             "404 Not Found" => PokemonError {
                 error_code: status_code,
                 error_detail: detail
-                    .unwrap_or(ERROR_404.to_string()),
+                    .unwrap_or_else(|| ERROR_404.to_string()),
             },
             "503 Service Unavailable" => PokemonError {
                 error_code: status_code,
-                error_detail: detail.unwrap_or(ERROR_503.to_string()),
+                error_detail: detail.unwrap_or_else(|| ERROR_503.to_string()),
             },
             _ => PokemonError {
                 error_code: HTTP_STATUS_CODE_500.to_string(),
-                error_detail: detail.unwrap_or(ERROR_500.to_string()),
+                error_detail: detail.unwrap_or_else(|| ERROR_500.to_string()),
             },
         }
     }

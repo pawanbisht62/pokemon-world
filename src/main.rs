@@ -1,9 +1,11 @@
 use actix_web::{App, HttpServer, web};
 use log::{info};
 use pokemon_world::request_handlers::basic_info::get_info_handler;
+use pokemon_world::request_handlers::translated_desc::get_translated_info_handler;
 
 static POKEMON_PATH: &str = "/pokemon";
-static NAME_PLACEHOLDER: &str = "/{name}";
+static NAME: &str = "/{name}";
+static PATH_FOR_TRANSLATED: &str = "/translated/{name}";
 static SOCKET: &str = "127.0.0.1:8080";
 
 
@@ -16,7 +18,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new().service(
             web::scope(POKEMON_PATH)
-                .route(NAME_PLACEHOLDER, web::get().to(get_info_handler)),
+                .route(NAME, web::get().to(get_info_handler))
+                .route(PATH_FOR_TRANSLATED, web::get().to(get_translated_info_handler)),
         )
     })
         .bind(SOCKET)?

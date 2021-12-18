@@ -2,10 +2,10 @@ use std::str::FromStr;
 use actix_web::{HttpResponse, web};
 use log::debug;
 
-use crate::rest_endpoints::get_pokemon_info;
+use crate::pokeapi_endpoints::get_pokemon_info;
 
-static CONTENT_TYPE: &str = "application/json";
-static POKEAPI_BASIC_INFO_PATH: &str = "https://pokeapi.co/api/v2/pokemon-species/";
+pub static CONTENT_TYPE: &str = "application/json";
+pub static POKEAPI_BASIC_INFO_PATH: &str = "https://pokeapi.co/api/v2/pokemon-species/";
 
 /// This function inserts the handler for retrieving pokemon's detail
 ///
