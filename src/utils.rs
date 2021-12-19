@@ -30,8 +30,7 @@ impl PokemonError {
         match status_code.as_str() {
             "404 Not Found" => PokemonError {
                 error_code: status_code,
-                error_detail: detail
-                    .unwrap_or_else(|| ERROR_404.to_string()),
+                error_detail: detail.unwrap_or_else(|| ERROR_404.to_string()),
             },
             "503 Service Unavailable" => PokemonError {
                 error_code: status_code,
@@ -52,7 +51,10 @@ mod test {
     #[test]
     fn test_get_error_detail_404() {
         let error = PokemonError::get_error_detail("404 Not Found".to_string(), None);
-        assert_eq!(error.error_detail, "Unable to find the details of requested pokemon".to_string());
+        assert_eq!(
+            error.error_detail,
+            "Unable to find the details of requested pokemon".to_string()
+        );
     }
 
     #[test]
@@ -66,7 +68,4 @@ mod test {
         let error = PokemonError::get_error_detail("500".to_string(), None);
         assert_eq!(error.error_detail, "Internal Server Error".to_string());
     }
-
-
 }
-

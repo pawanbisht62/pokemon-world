@@ -1,6 +1,6 @@
-use std::str::FromStr;
-use actix_web::{HttpResponse, web};
+use actix_web::{web, HttpResponse};
 use log::debug;
+use std::str::FromStr;
 
 use crate::pokeapi_endpoints::get_pokemon_info;
 
@@ -18,12 +18,12 @@ pub static POKEAPI_BASIC_INFO_PATH: &str = "https://pokeapi.co/api/v2/pokemon-sp
 /// This function returns the HTTPResponse will the success or error details
 pub async fn get_info_handler(name: web::Path<String>) -> HttpResponse {
     match get_pokemon_info(name.as_str(), POKEAPI_BASIC_INFO_PATH).await {
-        Ok(basic_info) =>  {
+        Ok(basic_info) => {
             debug!("Got pokemon details");
             HttpResponse::Ok()
                 .content_type(CONTENT_TYPE)
                 .json(basic_info)
-        },
+        }
         Err(error) => {
             debug!("Error from basic_info handler {:?}", &error);
             HttpResponse::SeeOther()
@@ -39,8 +39,8 @@ pub async fn get_info_handler(name: web::Path<String>) -> HttpResponse {
 
 #[cfg(test)]
 mod test {
-    use actix_web::web::Path;
     use crate::request_handlers::basic_info::get_info_handler;
+    use actix_web::web::Path;
 
     #[actix_web::test]
     async fn test_get_info_handler_success() {
@@ -53,5 +53,4 @@ mod test {
         let res = get_info_handler(Path::from("mewtwo1".to_string())).await;
         assert!(res.status().is_client_error());
     }
-
 }

@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use actix_web::{HttpResponse, web};
-use log::{debug};
+use actix_web::{web, HttpResponse};
+use log::debug;
 
+use crate::pokeapi_endpoints::{get_pokemon_info, get_translated_text, BasicInfo};
 use crate::request_handlers::basic_info::{CONTENT_TYPE, POKEAPI_BASIC_INFO_PATH};
-use crate::pokeapi_endpoints::{BasicInfo, get_translated_text, get_pokemon_info};
 
 static POKEAPI_TRANSLATED_YODA_PATH: &str = "https://api.funtranslations.com/translate/yoda.json";
-static POKEAPI_TRANSLATED_SHAKESPEARE_PATH: &str = "https://api.funtranslations.com/translate/shakespeare.json";
+static POKEAPI_TRANSLATED_SHAKESPEARE_PATH: &str =
+    "https://api.funtranslations.com/translate/shakespeare.json";
 static TEXT: &str = "text";
 static CAVE: &str = "Cave";
 
@@ -27,7 +28,7 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
             let mut json_body: HashMap<&str, &str> = HashMap::new();
             json_body.insert(TEXT, basic_info.description.as_str());
 
-            if basic_info.habitat == CAVE || basic_info.isLegendary{
+            if basic_info.habitat == CAVE || basic_info.isLegendary {
                 match get_translated_text(POKEAPI_TRANSLATED_YODA_PATH, json_body).await {
                     Ok(translated_text) => {
                         let info = BasicInfo {
@@ -36,9 +37,7 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
                             habitat: basic_info.habitat,
                             isLegendary: basic_info.isLegendary,
                         };
-                        HttpResponse::Ok()
-                            .content_type(CONTENT_TYPE)
-                            .json(info)
+                        HttpResponse::Ok().content_type(CONTENT_TYPE).json(info)
                     }
                     Err(yoda_error) => {
                         debug!("Error from yoda api");
@@ -60,22 +59,21 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
                             habitat: basic_info.habitat,
                             isLegendary: basic_info.isLegendary,
                         };
-                        HttpResponse::Ok()
-                            .content_type(CONTENT_TYPE)
-                            .json(info)
+                        HttpResponse::Ok().content_type(CONTENT_TYPE).json(info)
                     }
                     Err(shakespeare_error) => {
                         debug!("Error from shakespeare api");
                         HttpResponse::SeeOther()
                             .status(
-                                reqwest::StatusCode::from_str(&shakespeare_error.error_code.as_str()[..3])
-                                    .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
+                                reqwest::StatusCode::from_str(
+                                    &shakespeare_error.error_code.as_str()[..3],
+                                )
+                                .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
                             )
                             .content_type(CONTENT_TYPE)
                             .json(shakespeare_error)
                     }
                 }
-
             }
         }
         Err(error) => {
@@ -93,8 +91,8 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
 
 #[cfg(test)]
 mod test {
-    use actix_web::web::{Path};
     use crate::request_handlers::translated_desc::get_translated_info_handler;
+    use actix_web::web::Path;
 
     #[actix_web::test]
     async fn test_get_translated_info_handler_success_yoda() {
@@ -114,4 +112,3 @@ mod test {
         assert_eq!(res.status().as_str(), "404 Not Found");
     }
 }
-
