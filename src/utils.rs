@@ -7,7 +7,7 @@ static ERROR_500: &str = "Internal Server Error";
 static HTTP_STATUS_CODE_500: &str = "500";
 
 /// struct used to return error object
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct PokemonError {
     pub error_code: String,
     error_detail: String,
@@ -44,3 +44,29 @@ impl PokemonError {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::utils::PokemonError;
+
+    #[test]
+    fn test_get_error_detail_404() {
+        let error = PokemonError::get_error_detail("404 Not Found".to_string(), None);
+        assert_eq!(error.error_detail, "Unable to find the details of requested pokemon".to_string());
+    }
+
+    #[test]
+    fn test_get_error_detail_503() {
+        let error = PokemonError::get_error_detail("503 Service Unavailable".to_string(), None);
+        assert_eq!(error.error_detail, "Service Unavailable".to_string());
+    }
+
+    #[test]
+    fn test_get_error_detail_500() {
+        let error = PokemonError::get_error_detail("500".to_string(), None);
+        assert_eq!(error.error_detail, "Internal Server Error".to_string());
+    }
+
+
+}
+

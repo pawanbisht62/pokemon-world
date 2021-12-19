@@ -9,6 +9,8 @@ use crate::pokeapi_endpoints::{BasicInfo, get_translated_text, get_pokemon_info}
 
 static POKEAPI_TRANSLATED_YODA_PATH: &str = "https://api.funtranslations.com/translate/yoda.json";
 static POKEAPI_TRANSLATED_SHAKESPEARE_PATH: &str = "https://api.funtranslations.com/translate/shakespeare.json";
+static TEXT: &str = "text";
+static CAVE: &str = "Cave";
 
 /// This function inserts the handler for retrieving pokemon's detail
 ///
@@ -23,9 +25,9 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
     match get_pokemon_info(name.as_str(), POKEAPI_BASIC_INFO_PATH).await {
         Ok(basic_info) => {
             let mut json_body: HashMap<&str, &str> = HashMap::new();
-            json_body.insert("text", basic_info.description.as_str());
+            json_body.insert(TEXT, basic_info.description.as_str());
 
-            if basic_info.habitat == "Cave" || basic_info.isLegendary{
+            if basic_info.habitat == CAVE || basic_info.isLegendary{
                 match get_translated_text(POKEAPI_TRANSLATED_YODA_PATH, json_body).await {
                     Ok(translated_text) => {
                         let info = BasicInfo {
@@ -42,7 +44,7 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
                         debug!("Error from yoda api");
                         HttpResponse::SeeOther()
                             .status(
-                                reqwest::StatusCode::from_str(yoda_error.error_code.as_str())
+                                reqwest::StatusCode::from_str(&yoda_error.error_code.as_str()[..3])
                                     .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
                             )
                             .content_type(CONTENT_TYPE)
@@ -66,7 +68,7 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
                         debug!("Error from shakespeare api");
                         HttpResponse::SeeOther()
                             .status(
-                                reqwest::StatusCode::from_str(shakespeare_error.error_code.as_str())
+                                reqwest::StatusCode::from_str(&shakespeare_error.error_code.as_str()[..3])
                                     .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
                             )
                             .content_type(CONTENT_TYPE)
@@ -80,12 +82,36 @@ pub async fn get_translated_info_handler(name: web::Path<String>) -> HttpRespons
             debug!("Error from basic_info api");
             HttpResponse::SeeOther()
                 .status(
-                    reqwest::StatusCode::from_str(error.error_code.as_str())
+                    reqwest::StatusCode::from_str(&error.error_code.as_str()[..3])
                         .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
                 )
                 .content_type(CONTENT_TYPE)
                 .json(error)
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use actix_web::web::{Path};
+    use crate::request_handlers::translated_desc::get_translated_info_handler;
+
+    #[actix_web::test]
+    async fn test_get_translated_info_handler_success_yoda() {
+        let res = get_translated_info_handler(Path::from("mewtwo".to_string())).await;
+        assert!(res.status().is_success());
+    }
+
+    #[actix_web::test]
+    async fn test_get_translated_info_handler_success_shakespeare() {
+        let res = get_translated_info_handler(Path::from("ditto".to_string())).await;
+        assert!(res.status().is_success());
+    }
+
+    #[actix_web::test]
+    async fn test_get_translated_info_handler_failure() {
+        let res = get_translated_info_handler(Path::from("ditto".to_string())).await;
+        assert_eq!(res.status().as_str(), "404 Not Found");
     }
 }
 

@@ -25,14 +25,33 @@ pub async fn get_info_handler(name: web::Path<String>) -> HttpResponse {
                 .json(basic_info)
         },
         Err(error) => {
-            debug!("Error from api");
+            debug!("Error from basic_info handler {:?}", &error);
             HttpResponse::SeeOther()
                 .status(
-                    reqwest::StatusCode::from_str(error.error_code.as_str())
+                    reqwest::StatusCode::from_str(&error.error_code.as_str()[..3])
                         .unwrap_or(reqwest::StatusCode::INTERNAL_SERVER_ERROR),
                 )
                 .content_type(CONTENT_TYPE)
                 .json(error)
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    use actix_web::web::Path;
+    use crate::request_handlers::basic_info::get_info_handler;
+
+    #[actix_web::test]
+    async fn test_get_info_handler_success() {
+        let res = get_info_handler(Path::from("mewtwo".to_string())).await;
+        assert!(res.status().is_success());
+    }
+
+    #[actix_web::test]
+    async fn test_get_info_handler_failure() {
+        let res = get_info_handler(Path::from("mewtwo1".to_string())).await;
+        assert!(res.status().is_client_error());
+    }
+
 }

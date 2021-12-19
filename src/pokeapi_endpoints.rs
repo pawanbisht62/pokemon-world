@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use std::collections::HashMap;
 use std::str;
 use serde::{Deserialize, Serialize};
@@ -7,6 +8,7 @@ use crate::utils::PokemonError;
 
 /// structure used for success response object
 #[derive(Serialize, Deserialize)]
+
 pub struct BasicInfo {
     pub(crate) name: String,
     pub description: String,
@@ -114,7 +116,7 @@ pub async fn get_translated_text(
                 }
             },
             _ => {
-                debug!("error status code:{}", response.status().to_string());
+                debug!("error status code:{:?}", &response);
                 Err(PokemonError::get_error_detail(
                     response.status().to_string(),
                     None,
@@ -128,5 +130,59 @@ pub async fn get_translated_text(
                 Some(endpoint_error.to_string()),
             ))
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+    use crate::pokeapi_endpoints::{get_pokemon_info, get_translated_text};
+    use crate::request_handlers::basic_info::POKEAPI_BASIC_INFO_PATH;
+
+    static INVALID_URL: &str = "httppokeapi.co/api/v2/pokemon-specie/";
+    static POKEAPI_TRANSLATED_SHAKESPEARE_PATH: &str = "https://api.funtranslations.com/translate/shakespeare.json";
+
+    #[actix_web::test]
+    async fn test_get_pokemon_info_success() {
+        let res = get_pokemon_info("mewtwo", POKEAPI_BASIC_INFO_PATH).await;
+        assert!(res.is_ok());
+    }
+
+    #[actix_web::test]
+    async fn test_get_pokemon_info_endpoint_status_failure() {
+        let res = get_pokemon_info("mewtwo1", INVALID_URL).await;
+        assert_eq!(res.err().unwrap().error_code, "404 Not Found");
+    }
+
+    #[actix_web::test]
+    async fn test_get_pokemon_info_endpoint_failure() {
+        let res = get_pokemon_info("mewtwo", INVALID_URL).await;
+        assert_eq!(res.err().unwrap().error_code, "500");
+    }
+
+    #[actix_web::test]
+    async fn test_get_translated_text_success() {
+        let res = get_translated_text(POKEAPI_TRANSLATED_SHAKESPEARE_PATH, get_test_body()).await;
+        assert!(res.is_ok());
+    }
+
+    #[actix_web::test]
+    async fn test_get_translated_text_status_failure() {
+        let mut json_body: HashMap<&str, &str> = HashMap::new();
+        json_body.insert("test", "test");
+        let res = get_translated_text(POKEAPI_TRANSLATED_SHAKESPEARE_PATH, json_body).await;
+        assert_eq!(res.err().unwrap().error_code, "400");
+    }
+
+    #[actix_web::test]
+    async fn test_get_translated_text_endpoint_failure() {
+        let res = get_translated_text(INVALID_URL, get_test_body()).await;
+        assert_eq!(res.err().unwrap().error_code, "500");
+    }
+
+    fn get_test_body() -> HashMap<&'static str, &'static str> {
+        let mut json_body: HashMap<&str, &str> = HashMap::new();
+        json_body.insert("text", "test");
+        json_body
     }
 }

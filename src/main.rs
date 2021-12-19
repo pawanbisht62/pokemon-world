@@ -1,5 +1,6 @@
 use actix_web::{App, HttpServer, web};
-use log::{info};
+use log::info;
+
 use pokemon_world::request_handlers::basic_info::get_info_handler;
 use pokemon_world::request_handlers::translated_desc::get_translated_info_handler;
 
@@ -25,4 +26,31 @@ async fn main() -> std::io::Result<()> {
         .bind(SOCKET)?
         .run()
         .await
+}
+
+#[cfg(test)]
+mod test {
+    use actix_web::{App, test, web};
+
+    use pokemon_world::request_handlers::basic_info::get_info_handler;
+
+    #[actix_web::test]
+    async fn test_route_get_info() {
+        let mut app =
+            test::init_service(App::new().route("/pokemon/{name}",
+                                                web::get().to(get_info_handler))).await;
+        let req = test::TestRequest::get().uri("/pokemon/mewtwo").to_request();
+        let res = test::call_service(&mut app, req).await;
+        assert!(res.status().is_success());
+    }
+
+    #[actix_web::test]
+    async fn test_route_translated_info() {
+        let mut app =
+            test::init_service(App::new().route("/pokemon/translated/{name}",
+                                                web::get().to(get_info_handler))).await;
+        let req = test::TestRequest::get().uri("/pokemon/translated/mewtwo").to_request();
+        let res = test::call_service(&mut app, req).await;
+        assert!(res.status().is_success());
+    }
 }
