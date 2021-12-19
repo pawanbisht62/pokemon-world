@@ -74,9 +74,9 @@ curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain none
 ## Running Application
 
 ```
-git clone https://github.com/pawanbisht/pokemon_world
-cd pokemon_world
-RUST_LOG=debug cargo run
+git clone https://github.com/pawanbisht62/pokemon-world.git
+cd pokemon-world
+cargo run
 ```
 
 ### Running application will look like this:
@@ -98,7 +98,3 @@ cargo test
 
 * Note:
 All the test case won't be able to executed successfully as the translated endpoint of pokeapi accepts only 5 requests in an hour.
-
-
-
-
